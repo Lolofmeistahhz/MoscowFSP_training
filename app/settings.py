@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 CSRF_COOKIE_SECURE = False
@@ -60,11 +61,23 @@ CSRF_USE_SESSIONS = False
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 CSRF_TRUSTED_ORIGINS = []
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3009',
+    'http://127.0.0.1:3009',
+    'http://31.132.129.137:3009',
+]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3009',
+    'http://127.0.0.1:3009',
+    'http://31.132.129.137:3009',
+]
 
 ROOT_URLCONF = 'app.urls'
+
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOW_METHODS = [
     'GET',
     'POST',
@@ -77,9 +90,11 @@ CORS_ALLOW_METHODS = [
 CORS_ALLOW_HEADERS = [
     'Content-Type',
     'Authorization',
-    'access-control-allow-origin', 'access-control-allow-origins'
+    'access-control-allow-origin',
+    'access-control-allow-origins',
+    'access-control-allow-headers',
+    'access-control-allow-methods'
 ]
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -134,13 +149,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 UNFOLD = {
 
-
     "COLORS": {
-         "background": {
+        "background": {
             "default": "#1b1b1f",  # Фон
         },
         "surface": {
@@ -153,9 +165,28 @@ UNFOLD = {
             "primary": "#a8c0f7",  # Текст
             "secondary": "#0d3974",  # Текст2
         },
-    },
-
-
+        "font": {
+            "subtle-light": "107 114 128",
+            "subtle-dark": "156 163 175",
+            "default-light": "75 85 99",
+            "default-dark": "209 213 219",
+            "important-light": "17 24 39",
+            "important-dark": "243 244 246",
+        },
+        "primary": {
+            "50": "250 245 255",
+            "100": "243 232 255",
+            "200": "233 213 255",
+            "300": "216 180 254",
+            "400": "192 132 252",
+            "500": "168 85 247",
+            "600": "147 51 234",
+            "700": "126 34 206",
+            "800": "107 33 168",
+            "900": "88 28 135",
+            "950": "59 7 100",
+        },
+    }
 }
 
 # Internationalization
@@ -175,12 +206,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'staticfiles'),
-]
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'staticfiles'),
+# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
