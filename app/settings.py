@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-6n98y0g%3^pzazsgf7_$h0)5xl)_#=of6d_(_q0)541j8ly8l)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", 'https://20db-94-75-145-86.ngrok-free.app']
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -62,10 +62,7 @@ CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 CSRF_TRUSTED_ORIGINS = []
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000'
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'app.urls'
 CORS_ALLOW_METHODS = [
@@ -137,6 +134,30 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+
+UNFOLD = {
+
+
+    "COLORS": {
+         "background": {
+            "default": "#1b1b1f",  # Фон
+        },
+        "surface": {
+            "default": "#44474f",  # Заливка инпута
+        },
+        "button": {
+            "default": "#adc6ff",  # Кнопка
+        },
+        "text": {
+            "primary": "#a8c0f7",  # Текст
+            "secondary": "#0d3974",  # Текст2
+        },
+    },
+
+
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -157,3 +178,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
