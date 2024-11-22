@@ -1,19 +1,93 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from .models import Test, UserAccount, UserRole
+from .models import (
+    Calendar, CalendarSport, CalendarSportType, SexCategory, AgeCategory,
+    CalendarSportInfo, TeamInfo, Notifications, ProgramInfo, DisciplineInfo,
+    UserRole, User, Files, SexAgeFilter, ProgramFilter, DisciplineFilter,
+    SavedFilters
+)
 
-@admin.register(Test)
-class TestAdmin(ModelAdmin):
-    list_display = ('name', 'age')
+@admin.register(Calendar)
+class CalendarAdmin(ModelAdmin):
+    list_display = ('id', 'name', 'description', 'file')
+    search_fields = ('name', 'description')
+
+@admin.register(CalendarSport)
+class CalendarSportAdmin(ModelAdmin):
+    list_display = ('id', 'calendar', 'name', 'description', 'image')
+    search_fields = ('name', 'description')
+
+@admin.register(CalendarSportType)
+class CalendarSportTypeAdmin(ModelAdmin):
+    list_display = ('id', 'name', 'description')
+    search_fields = ('name', 'description')
+
+@admin.register(SexCategory)
+class SexCategoryAdmin(ModelAdmin):
+    list_display = ('id', 'sex')
+    search_fields = ('sex',)
+
+@admin.register(AgeCategory)
+class AgeCategoryAdmin(ModelAdmin):
+    list_display = ('id', 'age')
+    search_fields = ('age',)
+
+@admin.register(CalendarSportInfo)
+class CalendarSportInfoAdmin(ModelAdmin):
+    list_display = ('id', 'calendar_sport', 'date_from', 'date_to', 'location', 'image')
+    search_fields = ('calendar_sport__name', 'location')
+
+@admin.register(TeamInfo)
+class TeamInfoAdmin(ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+@admin.register(Notifications)
+class NotificationsAdmin(ModelAdmin):
+    list_display = ('id', 'name', 'event_info', 'calendar_sport', 'user')
+    search_fields = ('name', 'event_info')
+
+@admin.register(ProgramInfo)
+class ProgramInfoAdmin(ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+@admin.register(DisciplineInfo)
+class DisciplineInfoAdmin(ModelAdmin):
+    list_display = ('id', 'name')
     search_fields = ('name',)
 
 @admin.register(UserRole)
 class UserRoleAdmin(ModelAdmin):
-    list_display = ('name',)
+    list_display = ('id', 'name')
     search_fields = ('name',)
 
-@admin.register(UserAccount)
-class UserAccountAdmin(ModelAdmin):
-    list_display = ('login', 'id_role')
-    search_fields = ('login',)
-    list_filter = ('id_role',)
+@admin.register(User)
+class UserAdmin(ModelAdmin):
+    list_display = ('id', 'user_role', 'login', 'email', 'avatar', 'tg_chat')
+    search_fields = ('login', 'email')
+
+@admin.register(Files)
+class FilesAdmin(ModelAdmin):
+    list_display = ('id', 'file', 'checksum')
+    search_fields = ('checksum',)
+
+@admin.register(SexAgeFilter)
+class SexAgeFilterAdmin(ModelAdmin):
+    list_display = ('id', 'age', 'sex', 'calendar_sport_info')
+    search_fields = ('age__age', 'sex__sex')
+
+@admin.register(ProgramFilter)
+class ProgramFilterAdmin(ModelAdmin):
+    list_display = ('id', 'program', 'calendar_sport_info')
+    search_fields = ('program__name', 'calendar_sport_info__calendar_sport__name')
+
+@admin.register(DisciplineFilter)
+class DisciplineFilterAdmin(ModelAdmin):
+    list_display = ('id', 'discipline', 'calendar_sport_info')
+    search_fields = ('discipline__name', 'calendar_sport_info__calendar_sport__name')
+
+@admin.register(SavedFilters)
+class SavedFiltersAdmin(ModelAdmin):
+    list_display = ('id', 'user', 'name', 'value')
+    search_fields = ('user__login', 'name')

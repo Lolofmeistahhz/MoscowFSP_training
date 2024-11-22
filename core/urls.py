@@ -1,13 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import TestViewSet, UserRoleViewSet, UserAccountViewSet, TestPDFView
+
+from core.views import YandexGeocoderView, NotificationsViewSet, YandexGeocoderViewIDs, RecordView
 
 router = DefaultRouter()
-router.register(r'tests', TestViewSet)
-router.register(r'user-roles', UserRoleViewSet)
-router.register(r'user-accounts', UserAccountViewSet)
+router.register(r'notifications', NotificationsViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('tests/<int:id>/pdf/', TestPDFView.as_view(), name='test-pdf'),
+    path('geocode/', YandexGeocoderView.as_view(), name='geocode'),
+    path('geocode-ids/', YandexGeocoderViewIDs.as_view(), name='geocode-ids'),
+    path('record/', RecordView.as_view(), name='record'),
+    path('', include(router.urls))
 ]
