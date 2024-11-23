@@ -1,7 +1,9 @@
 from django.contrib import admin
+from django.contrib.admin import RelatedFieldListFilter
 from django_celery_beat.admin import TaskSelectWidget, PeriodicTaskForm
 from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule, SolarSchedule, ClockedSchedule
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, StackedInline
+from unfold.contrib.filters.admin import RelatedDropdownFilter
 from unfold.widgets import UnfoldAdminSelectWidget, UnfoldAdminTextInputWidget
 
 from .models import (
@@ -31,6 +33,11 @@ admin.site.unregister(SolarSchedule)
 admin.site.unregister(ClockedSchedule)
 
 
+class CalendarSportInfoInline(StackedInline):
+    model = CalendarSportInfo
+    extra = 0
+
+
 @admin.register(Calendar)
 class CalendarAdmin(ModelAdmin):
     list_display = ('id', 'name', 'description', 'file')
@@ -42,23 +49,13 @@ class CalendarSportAdmin(ModelAdmin):
     list_display = ('id', 'calendar', 'name', 'description', 'image')
     search_fields = ('name', 'description')
 
+    inlines = (CalendarSportInfoInline,)
+
 
 @admin.register(CalendarSportType)
 class CalendarSportTypeAdmin(ModelAdmin):
     list_display = ('id', 'name', 'description')
     search_fields = ('name', 'description')
-
-
-@admin.register(SexCategory)
-class SexCategoryAdmin(ModelAdmin):
-    list_display = ('id', 'sex')
-    search_fields = ('sex',)
-
-
-@admin.register(AgeCategory)
-class AgeCategoryAdmin(ModelAdmin):
-    list_display = ('id', 'age')
-    search_fields = ('age',)
 
 
 @admin.register(CalendarSportInfo)
@@ -69,8 +66,74 @@ class CalendarSportInfoAdmin(ModelAdmin):
 
 @admin.register(TeamInfo)
 class TeamInfoAdmin(ModelAdmin):
-    list_display = ('id', 'name')
     search_fields = ('name',)
+
+
+class DisciplineFilterInline(StackedInline):
+    model = DisciplineFilter
+    extra = 0
+
+
+@admin.register(DisciplineInfo)
+class DisciplineInfoAdmin(ModelAdmin):
+    list_display = ('id', 'name', 'get_filter')
+    search_fields = ('name',)
+    inlines = (DisciplineFilterInline,)
+
+    @admin.display(description='Filters')
+    def get_filter(self, obj: DisciplineInfo):
+        return [i.calendar_sport_info for i in obj.disciplinefilter_set.all()]
+
+
+@admin.register(DisciplineFilter)
+class DisciplineFilterAdmin(ModelAdmin):
+    list_display = ('id', 'discipline', 'calendar_sport_info')
+    search_fields = ('discipline__name', 'calendar_sport_info__calendar_sport__name')
+
+    list_filter = (('calendar_sport_info', RelatedDropdownFilter),)
+    list_filter_submit = True
+
+
+class ProgramFilterInline(StackedInline):  # noqa
+    model = ProgramFilter
+    extra = 0
+
+
+@admin.register(ProgramInfo)
+class ProgramInfoAdmin(ModelAdmin):
+    list_display = ('id', 'name', 'get_filter')
+    search_fields = ('name',)
+    inlines = (ProgramFilterInline,)
+
+    @admin.display(description='Filters')
+    def get_filter(self, obj: ProgramInfo):
+        return [i.calendar_sport_info for i in obj.programfilter_set.all()]
+
+
+@admin.register(ProgramFilter)
+class ProgramFilterAdmin(ModelAdmin):
+    list_display = ('id', 'program', 'calendar_sport_info')
+    search_fields = ('program__name', 'calendar_sport_info__calendar_sport__name')
+
+    list_filter = (('calendar_sport_info', RelatedDropdownFilter),)
+    list_filter_submit = True
+
+
+class AgeCategoryInline(StackedInline):
+    model = AgeCategory
+    extra = 0
+
+
+@admin.register(SexCategory)
+class SexCategoryAdmin(ModelAdmin):
+    search_fields = ('sex',)
+    # inlines = (AgeCategoryInline,)
+
+
+@admin.register(AgeCategory)
+class AgeCategoryAdmin(ModelAdmin):
+    list_display = ('id', 'age')
+    search_fields = ('age',)
 
 
 @admin.register(Notifications)
@@ -78,29 +141,7 @@ class NotificationsAdmin(ModelAdmin):
     list_display = ('id', 'name', 'event_info', 'calendar_sport_info', 'user')
     search_fields = ('name', 'event_info')
 
-
-@admin.register(ProgramInfo)
-class ProgramInfoAdmin(ModelAdmin):
-    list_display = ('id', 'name')
-    search_fields = ('name',)
-
-
-@admin.register(DisciplineInfo)
-class DisciplineInfoAdmin(ModelAdmin):
-    list_display = ('id', 'name')
-    search_fields = ('name',)
-
-
-@admin.register(UserRole)
-class UserRoleAdmin(ModelAdmin):
-    list_display = ('id', 'name')
-    search_fields = ('name',)
-
-
-@admin.register(User)
-class UserAdmin(ModelAdmin):
-    list_display = ('id', 'user_role', 'login', 'email', 'avatar', 'tg_chat')
-    search_fields = ('login', 'email')
+    autocomplete_fields = ["calendar_sport_info"]
 
 
 @admin.register(Files)
@@ -115,23 +156,30 @@ class SexAgeFilterAdmin(ModelAdmin):
     search_fields = ('age__age', 'sex__sex')
 
 
-@admin.register(ProgramFilter)
-class ProgramFilterAdmin(ModelAdmin):
-    list_display = ('id', 'program', 'calendar_sport_info')
-    search_fields = ('program__name', 'calendar_sport_info__calendar_sport__name')
-
-
-@admin.register(DisciplineFilter)
-class DisciplineFilterAdmin(ModelAdmin):
-    list_display = ('id', 'discipline', 'calendar_sport_info')
-    search_fields = ('discipline__name', 'calendar_sport_info__calendar_sport__name')
-
-
 @admin.register(SavedFilters)
 class SavedFiltersAdmin(ModelAdmin):
     list_display = ('id', 'user', 'name', 'value')
     search_fields = ('user__login', 'name')
 
+
+@admin.register(UserRole)
+class UserRoleAdmin(ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+
+@admin.register(User)
+class UserAdmin(ModelAdmin):
+    list_display = ('user_role', 'login', 'email', 'avatar', 'tg_chat')
+    search_fields = ('login', 'email')
+
+    readonly_fields = ('password',)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+# region Celery
 
 class UnfoldTaskSelectWidget(UnfoldAdminSelectWidget, TaskSelectWidget): pass
 
@@ -163,3 +211,5 @@ class SolarScheduleAdmin(ModelAdmin): pass
 
 @admin.register(ClockedSchedule)
 class ClockedScheduleAdmin(BaseClockedScheduleAdmin, ModelAdmin): pass
+
+# endregion

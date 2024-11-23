@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 import os
 
+from django.urls import reverse_lazy
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -57,7 +59,6 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
-
 
 # myproject/settings.py
 
@@ -177,7 +178,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+APP_TITLE = "FSP 2024"
 UNFOLD = {
+    "SITE_TITLE": APP_TITLE,
+    "SITE_HEADER": APP_TITLE,
+    "SITE_URL": "/",
+    "SITE_SYMBOL": "circle",
 
     "COLORS": {
         "background": {
@@ -214,6 +220,159 @@ UNFOLD = {
             "900": "88 28 135",
             "950": "59 7 100",
         },
+    },
+
+    "TABS": [
+        {
+            "models": ['core.calendarsport', 'core.calendarsporttype', 'core.teaminfo'],
+            "items": [
+                {
+                    "title": "Calendar",
+                    "link": reverse_lazy("admin:core_calendarsport_changelist"),
+                },
+                {
+                    "title": "Calendar type",
+                    "link": reverse_lazy("admin:core_calendarsporttype_changelist"),
+                },
+                {
+                    "title": "Team info",
+                    "link": reverse_lazy("admin:core_teaminfo_changelist"),
+                },
+            ]
+        }, {
+            "models": ['core.disciplineinfo', 'core.disciplinefilter'],
+            "items": [
+                {
+                    "title": "Discipline",
+                    "link": reverse_lazy("admin:core_disciplineinfo_changelist"),
+                },
+                {
+                    "title": "Discipline Filters",
+                    "link": reverse_lazy("admin:core_disciplinefilter_changelist"),
+                },
+            ]
+        }, {
+            "models": ['core.programinfo', 'core.programfilter'],
+            "items": [
+                {
+                    "title": "Program",
+                    "link": reverse_lazy("admin:core_programinfo_changelist"),
+                },
+                {
+                    "title": "Programs Filters",
+                    "link": reverse_lazy("admin:core_programfilter_changelist"),
+                },
+            ]
+        }, {
+            "models": ['core.sexcategory', 'core.sexagefilter'],
+            "items": [
+                {
+                    "title": "Gender",
+                    "link": reverse_lazy("admin:core_sexcategory_changelist"),
+                },
+                {
+                    "title": "Age Filters",
+                    "link": reverse_lazy("admin:core_sexagefilter_changelist"),
+                },
+            ]
+        },
+    ],
+
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Navigation",
+                "items": [
+                    {
+                        "title": "Sport calendar",
+                        "icon": "calendar_month",
+                        "link": reverse_lazy("admin:core_calendarsport_changelist"),
+                    }, {
+                        "title": "Disciplines",
+                        "icon": "emoji_events",
+                        "link": reverse_lazy("admin:core_disciplineinfo_changelist"),
+                    }, {
+                        "title": "Programs",
+                        "icon": "developer_guide",
+                        "link": reverse_lazy("admin:core_programinfo_changelist"),
+                    }, {
+                        "title": "Genders",
+                        "icon": "wc",
+                        "link": reverse_lazy("admin:core_sexcategory_changelist"),
+                    }, {
+                        "title": "Notifications",
+                        "icon": "notifications",
+                        "link": reverse_lazy("admin:core_notifications_changelist"),
+                    },
+                ]
+            },
+            {
+                "title": "More...",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Age categories",
+                        "icon": "draft",
+                        "link": reverse_lazy("admin:core_agecategory_changelist"),
+                    }, {
+                        "title": "Calendars",
+                        "icon": "draft",
+                        "link": reverse_lazy("admin:core_calendar_changelist"),
+                    }, {
+                        "title": "Saved filters",
+                        "icon": "draft",
+                        "link": reverse_lazy("admin:core_savedfilters_changelist"),
+                    }, {
+                        "title": "Files",
+                        "icon": "draft",
+                        "link": reverse_lazy("admin:core_files_changelist"),
+                    },
+                ]
+            },
+            {
+                "title": "Celery Tasks",
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Tasks",
+                        "icon": "task",
+                        "link": reverse_lazy("admin:django_celery_beat_periodictask_changelist"),
+                    },
+                    {
+                        "title": "Crontab",
+                        "icon": "update",
+                        "link": reverse_lazy("admin:django_celery_beat_crontabschedule_changelist"),
+                    },
+                    {
+                        "title": "Intervals",
+                        "icon": "arrow_range",
+                        "link": reverse_lazy("admin:django_celery_beat_intervalschedule_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Users & Groups",
+                'items': [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:core_user_changelist"),
+                    },
+                    {
+                        "title": "Roles",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:core_userrole_changelist"),
+                    },
+                    # {
+                    #     "title": "Admins",
+                    #     "icon": "person",
+                    #     "link": reverse_lazy("admin:auth_user_changelist"),
+                    # },
+                ]
+            }
+        ]
     }
 }
 
@@ -228,11 +387,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -240,7 +396,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
-
 
 CELERY_BROKER_URL = "amqp://guest:guest@94.228.127.47:32001//"
 CELERY_RESULT_BACKEND = "django-db"
