@@ -17,7 +17,7 @@ class CalendarSportInfoIdsSerializer(serializers.Serializer):
 class NotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
-        fields = ['id', 'name', 'event_info', 'calendar_sport', 'user']
+        fields = ['id', 'name', 'event_info', 'calendar_sport_info', 'user']
 
 class GenderAgeSerializer(serializers.Serializer):
     gender = serializers.CharField()
@@ -38,7 +38,7 @@ class RecordSerializer(serializers.ModelSerializer):
     sport_type = serializers.CharField(write_only=True)
     sport_type_person_type = serializers.CharField(write_only=True)
     uid = serializers.CharField(source='ekp', allow_null=True, required=False, write_only=True)
-    type_name = serializers.CharField(write_only=True)
+    event_name = serializers.CharField(write_only=True)
     start_date = serializers.DateField(source='date_from', write_only=True)
     end_date = serializers.DateField(source='date_to', write_only=True)
     members = serializers.IntegerField(source='count', write_only=True)
@@ -116,3 +116,23 @@ class RecordSerializer(serializers.ModelSerializer):
             )
 
         return calendar_sport_info
+
+class CalendarSportInfoFilterSerializer(serializers.Serializer):
+    calendarSportId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
+    disciplineId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
+    programId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
+    location = serializers.CharField(required=False, allow_null=True)
+    minCount = serializers.IntegerField(min_value=0, required=False, allow_null=True)
+    maxCount = serializers.IntegerField(min_value=0, required=False, allow_null=True)
+    ageId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
+    sexId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
+    dateFrom = serializers.DateField(required=False, allow_null=True)
+    dateTo = serializers.DateField(required=False, allow_null=True)
+    calendarSportTypeId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
+    page = serializers.IntegerField(min_value=1, required=False, default=1)
+    size = serializers.IntegerField(min_value=1, required=False, default=10)
+
+class CalendarSportInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CalendarSportInfo
+        fields = '__all__'

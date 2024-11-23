@@ -75,7 +75,7 @@ class TeamInfoAdmin(ModelAdmin):
 
 @admin.register(Notifications)
 class NotificationsAdmin(ModelAdmin):
-    list_display = ('id', 'name', 'event_info', 'calendar_sport', 'user')
+    list_display = ('id', 'name', 'event_info', 'calendar_sport_info', 'user')
     search_fields = ('name', 'event_info')
 
 

@@ -236,9 +236,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}
+
 
 CELERY_BROKER_URL = "amqp://guest:guest@94.228.127.47:32001//"
 CELERY_RESULT_BACKEND = "django-db"
+
+CELERY_TIMEZONE = "Europe/Moscow"
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 3600}
 

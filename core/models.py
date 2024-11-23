@@ -1,4 +1,8 @@
+import datetime
+
 from django.db import models
+from django.utils import timezone
+
 
 class Calendar(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID")
@@ -97,7 +101,8 @@ class Notifications(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID")
     name = models.CharField(max_length=255, verbose_name="Name")
     event_info = models.CharField(max_length=255, verbose_name="Event Info")
-    calendar_sport = models.ForeignKey(CalendarSport, on_delete=models.CASCADE, verbose_name="Calendar Sport")
+    calendar_sport_info = models.ForeignKey(CalendarSportInfo, on_delete=models.CASCADE, verbose_name="Calendar Sport",default=None)
+    alert_datetime = models.DateTimeField(blank=True,verbose_name="Alert time",default=timezone.now())
     user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name="User")
 
     class Meta:
