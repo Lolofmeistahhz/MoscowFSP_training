@@ -52,7 +52,7 @@ class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalendarSportInfo
         fields = [
-            'sport_type', 'sport_type_person_type', 'uid', 'type_name', 'start_date', 'end_date',
+            'sport_type', 'sport_type_person_type', 'uid', 'event_name', 'start_date', 'end_date',
             'members', 'location', 'metadata', 'genderAge', 'programms', 'disciplines', 'calendar'
         ]
 
@@ -65,7 +65,7 @@ class RecordSerializer(serializers.ModelSerializer):
         calendar_name = validated_data.pop('calendar')  # Добавлено новое поле
 
         # Извлекаем значение name из validated_data
-        name = validated_data.pop("type_name")
+        name = validated_data.pop("event_name")
 
         sport_type, _ = CalendarSport.objects.get_or_create(name=sport_type_name)
         sport_type_person_type, _ = CalendarSportType.objects.get_or_create(name=name)  # Используем извлеченное значение name
