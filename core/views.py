@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -37,7 +38,6 @@ class YandexGeocoderView(APIView):
 
         api_key = 'c4db6524-be53-4158-8b78-08b74c610458'
 
-
         url = f'https://geocode-maps.yandex.ru/1.x/?format=json&apikey={api_key}&geocode={address}'
 
         try:
@@ -57,6 +57,7 @@ class YandexGeocoderView(APIView):
 
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class YandexGeocoderViewIDs(APIView):
     @swagger_auto_schema(
@@ -118,9 +119,11 @@ class YandexGeocoderViewIDs(APIView):
 
         return Response(coordinates_list, status=status.HTTP_200_OK)
 
+
 class NotificationsViewSet(viewsets.ModelViewSet):
     queryset = Notifications.objects.all()
     serializer_class = NotificationsSerializer
+
 
 class RecordView(APIView):
     @swagger_auto_schema(
@@ -130,14 +133,17 @@ class RecordView(APIView):
             400: 'Invalid data'
         }
     )
-    def post(self, request):
-        serializer = RecordSerializer(data=request.data)
+    def post(self, request, format=None):
+        if isinstance(request.data, list):
+            serializer = RecordSerializer(data=request.data, many=True)
+        else:
+            serializer = RecordSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 def is_overlap(booking1, booking2):
     """Проверяет, пересекаются ли две заявки."""
@@ -145,36 +151,6 @@ def is_overlap(booking1, booking2):
     start2, end2 = booking2['date_from'], booking2['date_to']
     return not (end1 < start2 or end2 < start1)
 
-def filter_bookings(bookings):
-    """Фильтрует заявки, оставляя только те, которые не пересекаются."""
-    # Сортируем заявки по дате начала
-    sorted_bookings = sorted(bookings, key=lambda x: x['date_from'])
-
-    result = []
-    for booking in sorted_bookings:
-        # Проверяем, пересекается ли текущая заявка с уже добавленными
-        if all(not is_overlap(booking, b) for b in result):
-            result.append(booking)
-
-    return result
-
-# app/views.py
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-from core.models import CalendarSportInfo, DisciplineFilter
-from .serializers import CalendarSportInfoFilterSerializer, CalendarSportInfoSerializer
-from datetime import datetime
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
-
-def is_overlap(booking1, booking2):
-    """Проверяет, пересекаются ли две заявки."""
-    start1, end1 = booking1['date_from'], booking1['date_to']
-    start2, end2 = booking2['date_from'], booking2['date_to']
-    return not (end1 < start2 or end2 < start1)
 
 def filter_bookings(bookings):
     """Фильтрует заявки, оставляя только те, которые не пересекаются."""
@@ -186,6 +162,7 @@ def filter_bookings(bookings):
             result.append(booking)
 
     return result
+
 
 class CalendarSportInfoView(APIView):
     @swagger_auto_schema(
