@@ -77,7 +77,6 @@ class RecordSerializer(serializers.ModelSerializer):
             disciplines_data = validated_data.pop('disciplines', [])
             calendar_name = validated_data.pop('calendar', None)  # Добавлено новое поле
 
-            # Извлекаем значение name из validated_data
             name = validated_data.pop("event_name", None)
 
             if sport_type_name:
@@ -124,10 +123,10 @@ class RecordSerializer(serializers.ModelSerializer):
                             calendar_sport_info=calendar_sport_info
                         )
                     else:
-                        logger.error(f"GenderAgeSerializer validation error: {gender_age_serializer.errors}")
+                        print(f"GenderAgeSerializer validation error: {gender_age_serializer.errors}")
                         raise serializers.ValidationError(gender_age_serializer.errors)
                 except Exception as e:
-                    logger.error(f"Error creating SexAgeFilter: {e}")
+                    print(f"Error creating SexAgeFilter: {e}")
 
             for program_name in programms_data:
                 try:
@@ -137,7 +136,7 @@ class RecordSerializer(serializers.ModelSerializer):
                         calendar_sport_info=calendar_sport_info
                     )
                 except Exception as e:
-                    logger.error(f"Error creating ProgramFilter: {e}")
+                    print(f"Error creating ProgramFilter: {e}")
 
             for discipline_name in disciplines_data:
                 try:
@@ -147,11 +146,11 @@ class RecordSerializer(serializers.ModelSerializer):
                         calendar_sport_info=calendar_sport_info
                     )
                 except Exception as e:
-                    logger.error(f"Error creating DisciplineFilter: {e}")
+                    print(f"Error creating DisciplineFilter: {e}")
 
             return calendar_sport_info
         except Exception as e:
-            logger.error(f"An error occurred in RecordSerializer.create: {e}")
+            print(f"An error occurred in RecordSerializer.create: {e}")
             raise
 
 
