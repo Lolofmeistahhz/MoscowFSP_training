@@ -1,11 +1,13 @@
-import os
-from concurrent.futures import ThreadPoolExecutor
+import logging
 
+from django.db import transaction
 from rest_framework import serializers
 
 from core.models import Notifications, SexCategory, AgeCategory, CalendarSportType, TeamInfo, CalendarSportInfo, \
     SexAgeFilter, ProgramInfo, ProgramFilter, DisciplineInfo, DisciplineFilter, CalendarSport, Calendar
 
+
+logger = logging.getLogger(__name__)
 
 class GeocodeSerializer(serializers.Serializer):
     address = serializers.CharField(max_length=255, required=True)
@@ -77,6 +79,7 @@ class RecordSerializer(serializers.ModelSerializer):
             disciplines_data = validated_data.pop('disciplines', [])
             calendar_name = validated_data.pop('calendar', None)  # Добавлено новое поле
 
+            # Извлекаем значение name из validated_data
             name = validated_data.pop("event_name", None)
 
             if sport_type_name:
@@ -110,6 +113,7 @@ class RecordSerializer(serializers.ModelSerializer):
                 location=validated_data.get('location')
             )
 
+            sex_age_filters = []
             for gender_age in gender_age_data:
                 try:
                     gender_age_serializer = GenderAgeSerializer(data=gender_age)
@@ -117,42 +121,48 @@ class RecordSerializer(serializers.ModelSerializer):
                         gender_age_instance = gender_age_serializer.save()
                         sex_category = gender_age_instance['sex_category']
                         age_category = gender_age_instance['age_category']
-                        SexAgeFilter.objects.create(
+                        sex_age_filters.append(SexAgeFilter(
                             sex=sex_category,
                             age=age_category,
                             calendar_sport_info=calendar_sport_info
-                        )
+                        ))
                     else:
-                        print(f"GenderAgeSerializer validation error: {gender_age_serializer.errors}")
+                        logger.error(f"GenderAgeSerializer validation error: {gender_age_serializer.errors}")
                         raise serializers.ValidationError(gender_age_serializer.errors)
                 except Exception as e:
-                    print(f"Error creating SexAgeFilter: {e}")
+                    logger.error(f"Error creating SexAgeFilter: {e}")
 
+            program_filters = []
             for program_name in programms_data:
                 try:
                     program, _ = ProgramInfo.objects.get_or_create(name=program_name)
-                    ProgramFilter.objects.create(
+                    program_filters.append(ProgramFilter(
                         program=program,
                         calendar_sport_info=calendar_sport_info
-                    )
+                    ))
                 except Exception as e:
-                    print(f"Error creating ProgramFilter: {e}")
+                    logger.error(f"Error creating ProgramFilter: {e}")
 
+            discipline_filters = []
             for discipline_name in disciplines_data:
                 try:
                     discipline, _ = DisciplineInfo.objects.get_or_create(name=discipline_name)
-                    DisciplineFilter.objects.create(
+                    discipline_filters.append(DisciplineFilter(
                         discipline=discipline,
                         calendar_sport_info=calendar_sport_info
-                    )
+                    ))
                 except Exception as e:
-                    print(f"Error creating DisciplineFilter: {e}")
+                    logger.error(f"Error creating DisciplineFilter: {e}")
+
+            with transaction.atomic():
+                SexAgeFilter.objects.bulk_create(sex_age_filters)
+                ProgramFilter.objects.bulk_create(program_filters)
+                DisciplineFilter.objects.bulk_create(discipline_filters)
 
             return calendar_sport_info
         except Exception as e:
-            print(f"An error occurred in RecordSerializer.create: {e}")
+            logger.error(f"An error occurred in RecordSerializer.create: {e}")
             raise
-
 
 class CalendarSportInfoFilterSerializer(serializers.Serializer):
     calendarSportId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])

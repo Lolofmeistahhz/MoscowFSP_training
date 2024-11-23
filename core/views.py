@@ -1,7 +1,9 @@
+import logging
 import os
 
 import requests
 from django.core.mail import send_mail
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -14,6 +16,8 @@ from utils import send_telegram_message
 from .models import Notifications, CalendarSportInfo
 from .serializers import GeocodeSerializer, NotificationsSerializer, CalendarSportInfoIdsSerializer, RecordSerializer, \
     CalendarSportInfoSerializer, CalendarSportInfoFilterSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class YandexGeocoderView(APIView):
@@ -124,7 +128,6 @@ class NotificationsViewSet(viewsets.ModelViewSet):
     queryset = Notifications.objects.all()
     serializer_class = NotificationsSerializer
 
-
 class RecordView(APIView):
     @swagger_auto_schema(
         request_body=RecordSerializer,
@@ -134,15 +137,23 @@ class RecordView(APIView):
         }
     )
     def post(self, request, format=None):
-        if isinstance(request.data, list):
-            serializer = RecordSerializer(data=request.data, many=True)
-        else:
-            serializer = RecordSerializer(data=request.data)
+        try:
+            if isinstance(request.data, list):
+                serializer = RecordSerializer(data=request.data, many=True)
+            else:
+                serializer = RecordSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                with transaction.atomic():
+                    serializer.save()
+                logger.info("Data successfully saved.")
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                logger.error(f"Invalid data: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 def is_overlap(booking1, booking2):
