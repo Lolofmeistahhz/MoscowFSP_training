@@ -7,9 +7,10 @@ router = DefaultRouter()
 router.register(r'notifications', NotificationsViewSet)
 
 urlpatterns = [
-    path('geocode/', YandexGeocoderView.as_view(), name='geocode'),
-    path('geocode-ids/', YandexGeocoderViewIDs.as_view(), name='geocode-ids'),
-    path('record/', RecordView.as_view(), name='record'),
-    path('calendar-sport-info/', CalendarSportInfoView.as_view(), name='calendar-sport-info'),
-    path('', include(router.urls))
+    path('geocode', YandexGeocoderView.as_view(), name='geocode'),
+    path('geocode-ids', YandexGeocoderViewIDs.as_view(), name='geocode-ids'),
+    path('record', RecordView.as_view(), name='record'),
+    path('calendar-sport-info', CalendarSportInfoView.as_view(), name='calendar-sport-info'),
+    path('notifications', NotificationsViewSet.as_view({'get': 'list', 'post': 'create'}), name='notifications-list'),
+    path('notifications/<int:pk>', NotificationsViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='notifications-detail'),
 ]
