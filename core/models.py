@@ -68,7 +68,7 @@ class AgeCategory(models.Model):
 class CalendarSportInfo(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="ID")
     ekp = models.CharField(max_length=255, verbose_name="EKP")
-    description = models.CharField(max_length=255, verbose_name="Description", default="")
+    description = models.CharField(max_length=255, verbose_name="Description", default="",blank=True,null=True)
     image = models.ImageField(upload_to='static/img/events/', verbose_name="Event Image", blank=True, null=True)
     calendar_sport_type = models.ForeignKey(CalendarSportType, on_delete=models.CASCADE, verbose_name="Calendar Sport Type")
     calendar_sport = models.ForeignKey(CalendarSport, on_delete=models.CASCADE, verbose_name="Calendar Sport", blank=True, null=True)

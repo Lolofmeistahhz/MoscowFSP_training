@@ -24,17 +24,17 @@ def send_message_to_users(message, users):
     with ThreadPoolExecutor() as executor:
         for user in users:
             executor.submit(send_telegram_message, message=message, chat_id=user.tg_chat)
-
-@receiver(post_save, sender=CalendarSportInfo)
-def calendar_sport_info_post_save(sender, instance, created, **kwargs):
-    details = get_calendar_sport_info_details(instance)
-    message = f'Добавлено событие, вот информация:\n{details}' if created else f'Изменено событие, вот информация:\n{details}'
-    users_with_tg_chat = User.objects.filter(tg_chat__isnull=False).exclude(tg_chat='')
-    send_message_to_users(message, users_with_tg_chat)
-
-@receiver(post_delete, sender=CalendarSportInfo)
-def calendar_sport_info_post_delete(sender, instance, **kwargs):
-    details = get_calendar_sport_info_details(instance)
-    message = f'Прошло событие, вот информация:\n{details}'
-    users_with_tg_chat = User.objects.filter(tg_chat__isnull=False).exclude(tg_chat='')
-    send_message_to_users(message, users_with_tg_chat)
+#
+# @receiver(post_save, sender=CalendarSportInfo)
+# def calendar_sport_info_post_save(sender, instance, created, **kwargs):
+#     details = get_calendar_sport_info_details(instance)
+#     message = f'Добавлено событие, вот информация:\n{details}' if created else f'Изменено событие, вот информация:\n{details}'
+#     users_with_tg_chat = User.objects.filter(tg_chat__isnull=False).exclude(tg_chat='')
+#     send_message_to_users(message, users_with_tg_chat)
+#
+# @receiver(post_delete, sender=CalendarSportInfo)
+# def calendar_sport_info_post_delete(sender, instance, **kwargs):
+#     details = get_calendar_sport_info_details(instance)
+#     message = f'Прошло событие, вот информация:\n{details}'
+#     users_with_tg_chat = User.objects.filter(tg_chat__isnull=False).exclude(tg_chat='')
+#     send_message_to_users(message, users_with_tg_chat)

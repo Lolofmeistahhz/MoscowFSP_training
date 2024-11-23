@@ -1,3 +1,6 @@
+import os
+from concurrent.futures import ThreadPoolExecutor
+
 from rest_framework import serializers
 
 from core.models import Notifications, SexCategory, AgeCategory, CalendarSportType, TeamInfo, CalendarSportInfo, \
@@ -43,17 +46,15 @@ class GenderAgeSerializer(serializers.Serializer):
             age_category, _ = AgeCategory.objects.get_or_create(age=f"{minAge}-{maxAge}")
 
         return {'sex_category': sex_category, 'age_category': age_category}
-
 class RecordSerializer(serializers.ModelSerializer):
     sport_type = serializers.CharField(write_only=True)
-    sport_type_person_type = serializers.CharField(write_only=True)
+    sport_type_per_person = serializers.CharField(write_only=True)
     uid = serializers.CharField(source='ekp', allow_null=True, required=False, write_only=True)
     event_name = serializers.CharField(write_only=True)
     start_date = serializers.DateField(source='date_from', write_only=True)
     end_date = serializers.DateField(source='date_to', write_only=True)
     members = serializers.IntegerField(source='count', write_only=True)
     location = serializers.CharField(write_only=True)
-    metadata = serializers.CharField(source='description', write_only=True)
     genderAge = GenderAgeSerializer(many=True, required=False, write_only=True)
     programms = serializers.ListField(child=serializers.CharField(), required=False, write_only=True)
     disciplines = serializers.ListField(child=serializers.CharField(), required=False, write_only=True)
@@ -62,13 +63,13 @@ class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalendarSportInfo
         fields = [
-            'sport_type', 'sport_type_person_type', 'uid', 'event_name', 'start_date', 'end_date',
-            'members', 'location', 'metadata', 'genderAge', 'programms', 'disciplines', 'calendar'
+            'sport_type', 'sport_type_per_person', 'uid', 'event_name', 'start_date', 'end_date',
+            'members', 'location', 'genderAge', 'programms', 'disciplines', 'calendar'
         ]
 
     def create(self, validated_data):
         sport_type_name = validated_data.pop('sport_type')
-        sport_type_person_type_name = validated_data.pop('sport_type_person_type')
+        sport_type_per_person_name = validated_data.pop('sport_type_per_person')
         gender_age_data = validated_data.pop('genderAge', [])
         programms_data = validated_data.pop('programms', [])
         disciplines_data = validated_data.pop('disciplines', [])
@@ -78,7 +79,7 @@ class RecordSerializer(serializers.ModelSerializer):
         name = validated_data.pop("event_name")
 
         sport_type, _ = CalendarSport.objects.get_or_create(name=sport_type_name)
-        sport_type_person_type, _ = CalendarSportType.objects.get_or_create(name=name)  # Используем извлеченное значение name
+        sport_type_per_person, _ = CalendarSportType.objects.get_or_create(name=name)  # Используем извлеченное значение name
         calendar, _ = Calendar.objects.get_or_create(name=calendar_name)  # Создаем или получаем объект Calendar
 
         # Устанавливаем связь с объектом Calendar через поле calendar_sport
@@ -87,8 +88,8 @@ class RecordSerializer(serializers.ModelSerializer):
 
         calendar_sport_info = CalendarSportInfo.objects.create(
             calendar_sport=sport_type,
-            calendar_sport_type=sport_type_person_type,
-            team=TeamInfo.objects.get_or_create(name=sport_type_person_type_name)[0],
+            calendar_sport_type=sport_type_per_person,
+            team=TeamInfo.objects.get_or_create(name=sport_type_per_person_name)[0],
             ekp=validated_data.get('ekp'),
             description=validated_data.get('description'),
             date_from=validated_data.get('date_from'),
@@ -97,7 +98,7 @@ class RecordSerializer(serializers.ModelSerializer):
             location=validated_data.get('location')
         )
 
-        for gender_age in gender_age_data:
+        def create_sex_age_filter(gender_age):
             gender_age_serializer = GenderAgeSerializer(data=gender_age)
             if gender_age_serializer.is_valid():
                 gender_age_instance = gender_age_serializer.save()
@@ -111,19 +112,24 @@ class RecordSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError(gender_age_serializer.errors)
 
-        for program_name in programms_data:
+        def create_program_filter(program_name):
             program, _ = ProgramInfo.objects.get_or_create(name=program_name)
             ProgramFilter.objects.create(
                 program=program,
                 calendar_sport_info=calendar_sport_info
             )
 
-        for discipline_name in disciplines_data:
+        def create_discipline_filter(discipline_name):
             discipline, _ = DisciplineInfo.objects.get_or_create(name=discipline_name)
             DisciplineFilter.objects.create(
                 discipline=discipline,
                 calendar_sport_info=calendar_sport_info
             )
+
+        with ThreadPoolExecutor(max_workers = os.cpu_count()) as executor:
+            executor.map(create_sex_age_filter, gender_age_data)
+            executor.map(create_program_filter, programms_data)
+            executor.map(create_discipline_filter, disciplines_data)
 
         return calendar_sport_info
 
