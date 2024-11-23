@@ -47,7 +47,6 @@ class GenderAgeSerializer(serializers.Serializer):
 
         return {'sex_category': sex_category, 'age_category': age_category}
 
-
 class RecordSerializer(serializers.ModelSerializer):
     sport_type = serializers.CharField(write_only=True, required=False)
     sport_type_per_person = serializers.CharField(write_only=True, required=False)
@@ -103,8 +102,7 @@ class RecordSerializer(serializers.ModelSerializer):
             calendar_sport_info = CalendarSportInfo.objects.create(
                 calendar_sport=sport_type,
                 calendar_sport_type=sport_type_per_person,
-                team=TeamInfo.objects.get_or_create(name=sport_type_per_person_name)[
-                    0] if sport_type_per_person_name else None,
+                team=TeamInfo.objects.get_or_create(name=sport_type_per_person_name)[0] if sport_type_per_person_name else None,
                 ekp=validated_data.get('ekp'),
                 description=validated_data.get('description'),
                 date_from=validated_data.get('date_from'),
@@ -113,7 +111,7 @@ class RecordSerializer(serializers.ModelSerializer):
                 location=validated_data.get('location')
             )
 
-            def create_sex_age_filter(gender_age):
+            for gender_age in gender_age_data:
                 try:
                     gender_age_serializer = GenderAgeSerializer(data=gender_age)
                     if gender_age_serializer.is_valid():
@@ -126,12 +124,12 @@ class RecordSerializer(serializers.ModelSerializer):
                             calendar_sport_info=calendar_sport_info
                         )
                     else:
-                        print(f"GenderAgeSerializer validation error: {gender_age_serializer.errors}")
+                        logger.error(f"GenderAgeSerializer validation error: {gender_age_serializer.errors}")
                         raise serializers.ValidationError(gender_age_serializer.errors)
                 except Exception as e:
-                    print(f"Error creating SexAgeFilter: {e}")
+                    logger.error(f"Error creating SexAgeFilter: {e}")
 
-            def create_program_filter(program_name):
+            for program_name in programms_data:
                 try:
                     program, _ = ProgramInfo.objects.get_or_create(name=program_name)
                     ProgramFilter.objects.create(
@@ -139,9 +137,9 @@ class RecordSerializer(serializers.ModelSerializer):
                         calendar_sport_info=calendar_sport_info
                     )
                 except Exception as e:
-                    print(f"Error creating ProgramFilter: {e}")
+                    logger.error(f"Error creating ProgramFilter: {e}")
 
-            def create_discipline_filter(discipline_name):
+            for discipline_name in disciplines_data:
                 try:
                     discipline, _ = DisciplineInfo.objects.get_or_create(name=discipline_name)
                     DisciplineFilter.objects.create(
@@ -149,16 +147,11 @@ class RecordSerializer(serializers.ModelSerializer):
                         calendar_sport_info=calendar_sport_info
                     )
                 except Exception as e:
-                    print(f"Error creating DisciplineFilter: {e}")
-
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                executor.map(create_sex_age_filter, gender_age_data)
-                executor.map(create_program_filter, programms_data)
-                executor.map(create_discipline_filter, disciplines_data)
+                    logger.error(f"Error creating DisciplineFilter: {e}")
 
             return calendar_sport_info
         except Exception as e:
-            print(f"An error occurred in RecordSerializer.create: {e}")
+            logger.error(f"An error occurred in RecordSerializer.create: {e}")
             raise
 
 
