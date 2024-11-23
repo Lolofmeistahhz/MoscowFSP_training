@@ -19,10 +19,11 @@ class NotificationsSerializer(serializers.ModelSerializer):
         model = Notifications
         fields = ['id', 'name', 'event_info', 'calendar_sport_info', 'user']
 
+
 class GenderAgeSerializer(serializers.Serializer):
     gender = serializers.CharField()
-    minAge = serializers.IntegerField()
-    maxAge = serializers.IntegerField()
+    minAge = serializers.IntegerField(allow_null=True)
+    maxAge = serializers.IntegerField(allow_null=True)
 
     def create(self, validated_data):
         gender = validated_data['gender']
@@ -30,7 +31,16 @@ class GenderAgeSerializer(serializers.Serializer):
         maxAge = validated_data['maxAge']
 
         sex_category, _ = SexCategory.objects.get_or_create(sex=gender)
-        age_category, _ = AgeCategory.objects.get_or_create(age=f"{minAge}-{maxAge}")
+
+        # Обработка случая, когда minAge или maxAge равны null
+        if minAge is None and maxAge is None:
+            age_category, _ = AgeCategory.objects.get_or_create(age="")
+        elif minAge is None:
+            age_category, _ = AgeCategory.objects.get_or_create(age=f"-{maxAge}")
+        elif maxAge is None:
+            age_category, _ = AgeCategory.objects.get_or_create(age=f"{minAge}-")
+        else:
+            age_category, _ = AgeCategory.objects.get_or_create(age=f"{minAge}-{maxAge}")
 
         return {'sex_category': sex_category, 'age_category': age_category}
 
