@@ -22,7 +22,7 @@ class CalendarSportInfoIdsSerializer(serializers.Serializer):
 class NotificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
-        fields = ['id', 'name', 'event_info', 'calendar_sport_info', 'user']
+        fields = "__all__"
 
 
 class GenderAgeSerializer(serializers.Serializer):

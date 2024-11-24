@@ -90,20 +90,16 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 CSRF_TRUSTED_ORIGINS = []
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3009',
-    'http://127.0.0.1:3009',
-    'http://31.132.129.137:3009',
+"*"
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3009',
-    'http://127.0.0.1:3009',
-    'http://31.132.129.137:3009',
+"*"
 ]
 
 ROOT_URLCONF = 'app.urls'
 
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
