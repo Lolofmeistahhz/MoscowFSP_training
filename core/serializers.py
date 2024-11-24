@@ -37,13 +37,12 @@ class GenderAgeSerializer(serializers.Serializer):
 
         sex_category, _ = SexCategory.objects.get_or_create(sex=gender)
 
-        # Обработка случая, когда minAge или maxAge равны null
         if minAge is None and maxAge is None:
-            age_category, _ = AgeCategory.objects.get_or_create(age="")
+            age_category, _ = AgeCategory.objects.get_or_create(age="20-45")
         elif minAge is None:
-            age_category, _ = AgeCategory.objects.get_or_create(age=f"-{maxAge}")
+            age_category, _ = AgeCategory.objects.get_or_create(age=f"20-45")
         elif maxAge is None:
-            age_category, _ = AgeCategory.objects.get_or_create(age=f"{minAge}-")
+            age_category, _ = AgeCategory.objects.get_or_create(age=f"20-45")
         else:
             age_category, _ = AgeCategory.objects.get_or_create(age=f"{minAge}-{maxAge}")
 
@@ -183,4 +182,9 @@ class CalendarSportInfoFilterSerializer(serializers.Serializer):
 class CalendarSportInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalendarSportInfo
+        fields = '__all__'
+
+class DisciplineFilterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DisciplineFilter
         fields = '__all__'

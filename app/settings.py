@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'corsheaders'
+
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,6 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
-
 
 # myproject/settings.py
 
@@ -228,19 +228,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 8000,
 }
-
 
 CELERY_BROKER_URL = "amqp://guest:guest@94.228.127.47:32001//"
 CELERY_RESULT_BACKEND = "django-db"

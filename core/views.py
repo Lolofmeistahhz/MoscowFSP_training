@@ -1,3 +1,5 @@
+import datetime
+import json
 import logging
 import os
 
@@ -10,12 +12,11 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, generics
 
-from utils import send_telegram_message
-from .models import Notifications, CalendarSportInfo
+from .models import Notifications, CalendarSportInfo, DisciplineFilter
 from .serializers import GeocodeSerializer, NotificationsSerializer, CalendarSportInfoIdsSerializer, RecordSerializer, \
-    CalendarSportInfoSerializer, CalendarSportInfoFilterSerializer
+    CalendarSportInfoSerializer, CalendarSportInfoFilterSerializer, DisciplineFilterSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,6 @@ class YandexGeocoderView(APIView):
             if geo_objects:
                 coordinates = geo_objects[0]['GeoObject']['Point']['pos']
                 latitude, longitude = map(float, coordinates.split(' '))
-                send_telegram_message(message=f'Вот что вы искали {address}', chat_id='2108938640')
                 return_data = {'address': address, 'latitude': latitude, 'longitude': longitude}
                 return Response(return_data, status=status.HTTP_200_OK)
             else:
@@ -237,3 +237,79 @@ class CalendarSportInfoView(APIView):
             return paginator.get_paginated_response(result_serializer.data)
         else:
             return Response(filter_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DisciplineFilterUniqueListView(generics.ListAPIView):
+    serializer_class = DisciplineFilterSerializer
+
+    def get_queryset(self):
+        return DisciplineFilter.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        chunk_size = 1000
+        unique_entries = set()
+
+        for chunk in self.get_queryset().values('discipline__id', 'discipline__name').iterator(chunk_size=chunk_size):
+            entry = {'id': chunk['discipline__id'], 'name': chunk['discipline__name']}
+            unique_entries.add(frozenset(entry.items()))
+
+        unique_entries_list = [dict(entry) for entry in unique_entries]
+        return Response(unique_entries_list)
+
+
+class DisciplineFilterSearchView(generics.GenericAPIView):
+    serializer_class = DisciplineFilterSerializer
+
+    def get(self, request, discipline_name):
+        chunk_size = 1000
+        unique_entries = set()
+
+        queryset = DisciplineFilter.objects.filter(discipline__name__icontains=discipline_name)
+        for chunk in queryset.values('discipline__id', 'discipline__name').iterator(chunk_size=chunk_size):
+            entry = {'id': chunk['discipline__id'], 'name': chunk['discipline__name']}
+            unique_entries.add(frozenset(entry.items()))
+
+        unique_entries_list = [dict(entry) for entry in unique_entries]
+
+        return Response(unique_entries_list)
+
+class DisciplineFilterUniqueListViewJSON(generics.ListAPIView):
+    serializer_class = DisciplineFilterSerializer
+
+    def get_queryset(self):
+        return DisciplineFilter.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        chunk_size = 1000
+        unique_entries = set()
+
+        for chunk in self.get_queryset().values('discipline__id', 'discipline__name').iterator(chunk_size=chunk_size):
+            entry = {'id': chunk['discipline__id'], 'name': chunk['discipline__name']}
+            unique_entries.add(frozenset(entry.items()))
+
+        unique_entries_list = [dict(entry) for entry in unique_entries]
+
+        with open('result.json', 'w') as f:
+            json.dump(unique_entries_list, f)
+
+        with open('result.json', 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/json')
+            response['Content-Disposition'] = 'attachment; filename="result.json"'
+            return response
+
+class CalendarSportInfoStatsView(generics.GenericAPIView):
+    def get(self, request, *args, **kwargs):
+        now = datetime.datetime.now()
+
+        total_events = CalendarSportInfo.objects.count()
+
+        past_events = CalendarSportInfo.objects.filter(date_to__lt=now).count()
+
+
+        past_percentage = (past_events / total_events) * 100 if total_events > 0 else 0
+
+        future_percentage = 100 - past_percentage
+
+        result = [past_percentage, total_events, future_percentage]
+
+        return Response(result)

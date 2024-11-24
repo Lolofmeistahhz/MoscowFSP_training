@@ -153,7 +153,7 @@ class User(models.Model):
     email = models.EmailField(verbose_name="Email")
     avatar = models.ImageField(upload_to='static/img/user/', verbose_name="Avatar", blank=True, null=True)
     tg_chat = models.CharField(max_length=255, verbose_name="TG ID",blank=True)
-
+    fcm_token = models.CharField(max_length=255, verbose_name="Firebase token",blank=True,null=True)
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"

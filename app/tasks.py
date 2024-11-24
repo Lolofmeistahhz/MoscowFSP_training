@@ -1,19 +1,12 @@
-# app/tasks.py
 import datetime
 import logging
-
-from celery.utils.log import get_task_logger
-from django.utils import timezone
-
-from app.celery import app as celery_app
-from core.models import CalendarSportInfo, User, Notifications
+import requests
+from celery import Celery
+from core.models import Notifications, User
 from utils import send_telegram_message
 from concurrent.futures import ThreadPoolExecutor
 
-logger = get_task_logger(__name__)
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+celery_app = Celery('your_app')
 
 def get_calendar_sport_info_details(instance):
     details = (
@@ -31,23 +24,24 @@ def get_calendar_sport_info_details(instance):
     )
     return details
 
-
 def send_message_to_users(message, users):
     with ThreadPoolExecutor() as executor:
         for user in users:
             executor.submit(send_telegram_message, message=message, chat_id=user.tg_chat)
 
-
-@celery_app.task
-def test_task():
-    try:
-        calendar_sport_info = CalendarSportInfo.objects.get(id=16)
-        details = get_calendar_sport_info_details(calendar_sport_info)
-        message = f'Последнее событие, вот информация:\n{details}'
-        users_with_tg_chat = User.objects.filter(tg_chat__isnull=False).exclude(tg_chat='')
-        send_message_to_users(message, users_with_tg_chat)
-    except CalendarSportInfo.DoesNotExist:
-        logger.error(f"CalendarSportInfo with id {16} does not exist.")
+def send_http_request(title, content):
+    url = 'http://90.156.208.88:8080/bryansk/api/farebase/messages/push-global'
+    headers = {
+        'accept': '*/*',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'title': title,
+        'content': content
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code != 200:
+        print(f"Failed to send HTTP request: {response.status_code} - {response.text}")
 
 @celery_app.task
 def send_notifications():
@@ -58,11 +52,15 @@ def send_notifications():
     try:
         for notification in notifications:
             user = notification.user
+            calendar_sport_info = notification.calendar_sport_info
+            details = get_calendar_sport_info_details(calendar_sport_info)
+            message = f'Уведомление: {notification.name}\nИнформация о событии:\n{details}'
+
             if user.tg_chat:
-                calendar_sport_info = notification.calendar_sport_info
-                details = get_calendar_sport_info_details(calendar_sport_info)
-                message = f'Уведомление: {notification.name}\nИнформация о событии:\n{details}'
                 send_message_to_users(message, [user])
+
+            if user.fcm_token:
+                send_http_request(notification.name, message)
 
             notification.delete()
     except Exception as e:

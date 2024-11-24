@@ -75,7 +75,7 @@ class TeamInfoAdmin(ModelAdmin):
 
 @admin.register(Notifications)
 class NotificationsAdmin(ModelAdmin):
-    list_display = ('id', 'name', 'event_info', 'calendar_sport_info', 'user')
+    list_display = ('id', 'name', 'event_info', 'calendar_sport_info', 'user','alert_datetime')
     search_fields = ('name', 'event_info')
 
 
@@ -99,7 +99,7 @@ class UserRoleAdmin(ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(ModelAdmin):
-    list_display = ('id', 'user_role', 'login', 'email', 'avatar', 'tg_chat')
+    list_display = ('id', 'user_role', 'login', 'email', 'avatar', 'tg_chat','fcm_token')
     search_fields = ('login', 'email')
 
 
