@@ -191,3 +191,7 @@ class DisciplineFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisciplineFilter
         fields = '__all__'
+
+
+class EmptySerializer(serializers.Serializer):
+    pass

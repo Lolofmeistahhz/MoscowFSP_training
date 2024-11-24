@@ -14,7 +14,7 @@ from rest_framework import status, viewsets, generics
 
 from .models import Notifications, CalendarSportInfo, DisciplineFilter
 from .serializers import GeocodeSerializer, NotificationsSerializer, CalendarSportInfoIdsSerializer, RecordSerializer, \
-    CalendarSportInfoSerializer, CalendarSportInfoFilterSerializer, DisciplineFilterSerializer
+    CalendarSportInfoSerializer, CalendarSportInfoFilterSerializer, DisciplineFilterSerializer, EmptySerializer
 
 logger = logging.getLogger(__name__)
 
@@ -255,7 +255,12 @@ class DisciplineFilterUniqueListView(generics.ListAPIView):
 class DisciplineFilterSearchView(generics.GenericAPIView):
     serializer_class = DisciplineFilterSerializer
 
-    def get(self, request, discipline_name):
+    def get(self, request):
+        discipline_name = request.query_params.get('name', '')
+
+        if not discipline_name:
+            return Response({'error': 'Name parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
         chunk_size = 1000
         unique_entries = set()
 
@@ -293,6 +298,7 @@ class DisciplineFilterUniqueListViewJSON(generics.ListAPIView):
             return response
 
 class CalendarSportInfoStatsView(generics.GenericAPIView):
+    serializer_class = EmptySerializer
     def get(self, request, *args, **kwargs):
         now = datetime.datetime.now()
 
