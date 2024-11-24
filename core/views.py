@@ -1,12 +1,10 @@
 import datetime
 import json
 import logging
-import os
 
 import requests
-from django.core.mail import send_mail
 from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.pagination import PageNumberPagination
@@ -61,7 +59,6 @@ class YandexGeocoderView(APIView):
 
         except requests.exceptions.RequestException as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class YandexGeocoderViewIDs(APIView):
     @swagger_auto_schema(
@@ -157,14 +154,12 @@ class RecordView(APIView):
 
 
 def is_overlap(booking1, booking2):
-    """Проверяет, пересекаются ли две заявки."""
     start1, end1 = booking1['date_from'], booking1['date_to']
     start2, end2 = booking2['date_from'], booking2['date_to']
     return not (end1 < start2 or end2 < start1)
 
 
 def filter_bookings(bookings):
-    """Фильтрует заявки, оставляя только те, которые не пересекаются."""
     sorted_bookings = sorted(bookings, key=lambda x: x['date_from'])
 
     result = []

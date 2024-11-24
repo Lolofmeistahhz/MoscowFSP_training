@@ -6,8 +6,8 @@ from rest_framework import serializers
 from core.models import Notifications, SexCategory, AgeCategory, CalendarSportType, TeamInfo, CalendarSportInfo, \
     SexAgeFilter, ProgramInfo, ProgramFilter, DisciplineInfo, DisciplineFilter, CalendarSport, Calendar
 
-
 logger = logging.getLogger(__name__)
+
 
 class GeocodeSerializer(serializers.Serializer):
     address = serializers.CharField(max_length=255, required=True)
@@ -48,6 +48,7 @@ class GenderAgeSerializer(serializers.Serializer):
 
         return {'sex_category': sex_category, 'age_category': age_category}
 
+
 class RecordSerializer(serializers.ModelSerializer):
     sport_type = serializers.CharField(write_only=True, required=False)
     sport_type_per_person = serializers.CharField(write_only=True, required=False)
@@ -60,7 +61,7 @@ class RecordSerializer(serializers.ModelSerializer):
     genderAge = GenderAgeSerializer(many=True, required=False, write_only=True)
     programms = serializers.ListField(child=serializers.CharField(), required=False, write_only=True)
     disciplines = serializers.ListField(child=serializers.CharField(), required=False, write_only=True)
-    calendar = serializers.CharField(write_only=True, required=False)  # Добавлено новое поле
+    calendar = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = CalendarSportInfo
@@ -76,9 +77,8 @@ class RecordSerializer(serializers.ModelSerializer):
             gender_age_data = validated_data.pop('genderAge', [])
             programms_data = validated_data.pop('programms', [])
             disciplines_data = validated_data.pop('disciplines', [])
-            calendar_name = validated_data.pop('calendar', None)  # Добавлено новое поле
+            calendar_name = validated_data.pop('calendar', None)
 
-            # Извлекаем значение name из validated_data
             name = validated_data.pop("event_name", None)
 
             if sport_type_name:
@@ -103,7 +103,8 @@ class RecordSerializer(serializers.ModelSerializer):
             calendar_sport_info = CalendarSportInfo.objects.create(
                 calendar_sport=sport_type,
                 calendar_sport_type=sport_type_per_person,
-                team=TeamInfo.objects.get_or_create(name=sport_type_per_person_name)[0] if sport_type_per_person_name else None,
+                team=TeamInfo.objects.get_or_create(name=sport_type_per_person_name)[
+                    0] if sport_type_per_person_name else None,
                 ekp=validated_data.get('ekp'),
                 description=validated_data.get('description'),
                 date_from=validated_data.get('date_from'),
@@ -163,6 +164,7 @@ class RecordSerializer(serializers.ModelSerializer):
             logger.error(f"An error occurred in RecordSerializer.create: {e}")
             raise
 
+
 class CalendarSportInfoFilterSerializer(serializers.Serializer):
     calendarSportId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
     disciplineId = serializers.ListField(child=serializers.IntegerField(min_value=0), required=False, default=[])
@@ -183,6 +185,7 @@ class CalendarSportInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalendarSportInfo
         fields = '__all__'
+
 
 class DisciplineFilterSerializer(serializers.ModelSerializer):
     class Meta:

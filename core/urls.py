@@ -19,7 +19,7 @@ urlpatterns = [
          name='notifications-detail'),
     path('discipline-filters-json', DisciplineFilterUniqueListViewJSON.as_view(), name='discipline-filter-list-JSON'),
     path('discipline-filters', DisciplineFilterUniqueListView.as_view(), name='discipline-filter-list'),
-    path('discipline-filters/<str:discipline_name>/', DisciplineFilterSearchView.as_view(),
+    path('discipline-filters?name=<str:discipline_name>/', DisciplineFilterSearchView.as_view(),
          name='discipline-filter-search'),
     path('calendar-sport-info/stats', CalendarSportInfoStatsView.as_view(), name='calendar-sport-info-stats'),
 ]
